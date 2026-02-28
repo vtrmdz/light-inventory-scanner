@@ -24,7 +24,7 @@ Mobile-first barcode scanner for warehouse inventory. Quickly catalog inventory 
 
 **1. Clone & install**
 ```bash
-git clone <repo>
+git clone https://github.com/vtrmdz/light-inventory-scanner
 cd light-inventory-scanner
 npm install
 ```
