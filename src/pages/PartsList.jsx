@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { SearchIcon, ScanIcon, BoxIcon, LoaderIcon, ChevronLeftIcon } from '../components/Icons';
 import { getParts } from '../lib/api';
+import { T } from '../lib/i18n';
 
-export default function PartsList({ onSelectPart, onBack, onScan, refreshTrigger }) {
+export default function PartsList({ onSelectPart, onBack, onScan, refreshTrigger, lang }) {
   const [parts, setParts] = useState([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -12,6 +13,8 @@ export default function PartsList({ onSelectPart, onBack, onScan, refreshTrigger
   const [total, setTotal] = useState(0);
   const searchTimeout = useRef(null);
   const listRef = useRef(null);
+
+  const t = T[lang];
 
   const fetchPage = useCallback(async (pageNum, searchQuery, append = false) => {
     setLoading(true);
@@ -62,16 +65,16 @@ export default function PartsList({ onSelectPart, onBack, onScan, refreshTrigger
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={s.topBar}>
         <button className="btn btn-ghost" style={{ marginLeft: -10 }} onClick={onBack}>
-          <ChevronLeftIcon /> Back
+          <ChevronLeftIcon /> {t.back}
         </button>
-        <div className="badge badge-amber">{total} parts</div>
+        <div className="badge badge-amber">{total} {t.parts}</div>
       </div>
 
       <div style={s.searchWrap}>
         <SearchIcon size={18} />
         <input
           style={s.searchInput}
-          placeholder="Search barcode, notes, location..."
+          placeholder={t.searchPlaceholder}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -89,7 +92,7 @@ export default function PartsList({ onSelectPart, onBack, onScan, refreshTrigger
           <div style={s.centered}>
             <BoxIcon size={32} />
             <p style={{ color: 'var(--text-muted)', marginTop: 12 }}>
-              {search ? 'No parts match your search' : 'No parts scanned yet'}
+              {search ? t.noMatch : t.noPartsYet}
             </p>
           </div>
         ) : (
@@ -109,9 +112,11 @@ export default function PartsList({ onSelectPart, onBack, onScan, refreshTrigger
                   <div style={s.itemInfo}>
                     <div style={s.itemBarcode}>{part.barcode}</div>
                     <div style={s.itemMeta}>
-                      Qty: {part.quantity}
+                      {t.qty}: {part.quantity}
                       {part.location ? ` · ${part.location}` : ''}
-                      {(part.photos?.length || 0) > 0 ? ` · ${part.photos.length} photo${part.photos.length > 1 ? 's' : ''}` : ''}
+                      {(part.photos?.length || 0) > 0
+                        ? ` · ${part.photos.length} ${part.photos.length > 1 ? t.photos_ : t.photo}`
+                        : ''}
                     </div>
                     {part.notes && (
                       <div style={s.itemNotes}>{part.notes}</div>
@@ -119,7 +124,7 @@ export default function PartsList({ onSelectPart, onBack, onScan, refreshTrigger
                   </div>
                 </div>
                 <div style={s.itemTime}>
-                  {formatTime(part.updated_at)}
+                  {formatTime(part.updated_at, lang)}
                 </div>
               </button>
             ))}
@@ -131,13 +136,13 @@ export default function PartsList({ onSelectPart, onBack, onScan, refreshTrigger
                 onClick={loadMore}
                 disabled={loading}
               >
-                {loading ? <LoaderIcon size={16} /> : 'Load more'}
+                {loading ? <LoaderIcon size={16} /> : t.loadMore}
               </button>
             )}
 
             {!hasMore && parts.length > 0 && (
               <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, padding: '16px 0' }}>
-                All {total} parts loaded
+                {lang === 'es' ? `Todas las ${total} piezas cargadas` : `All ${total} parts loaded`}
               </p>
             )}
           </>
@@ -147,7 +152,7 @@ export default function PartsList({ onSelectPart, onBack, onScan, refreshTrigger
   );
 }
 
-function formatTime(dateStr) {
+function formatTime(dateStr, lang) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   const now = new Date();
@@ -155,11 +160,11 @@ function formatTime(dateStr) {
   const diffMin = Math.floor(diffMs / 60000);
   const diffHr = Math.floor(diffMs / 3600000);
 
-  if (diffMin < 1) return 'Just now';
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffHr < 24) return `${diffHr}h ago`;
+  if (diffMin < 1) return T[lang].justNow;
+  if (diffMin < 60) return lang === 'es' ? `Hace ${diffMin}m` : `${diffMin}m ago`;
+  if (diffHr < 24) return lang === 'es' ? `Hace ${diffHr}h` : `${diffHr}h ago`;
 
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString(lang === 'es' ? 'es-MX' : 'en-US', { month: 'short', day: 'numeric' });
 }
 
 const s = {

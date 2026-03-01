@@ -1,6 +1,8 @@
 import { ScanIcon, ListIcon, BoxIcon } from '../components/Icons';
+import { T } from '../lib/i18n';
 
-export default function HomePage({ sessionCount, onScan, onOpenList }) {
+export default function HomePage({ sessionCount, onScan, onOpenList, lang }) {
+  const t = T[lang];
   return (
     <div style={s.container} className="animate-fade-in">
       {/* Big scan CTA */}
@@ -8,36 +10,36 @@ export default function HomePage({ sessionCount, onScan, onOpenList }) {
         <div style={s.scanIconWrap}>
           <ScanIcon size={36} />
         </div>
-        <span style={s.scanText}>Scan Barcode</span>
-        <span style={s.scanSub}>Tap to open camera · New or existing part</span>
+        <span style={s.scanText}>{t.scanBarcode}</span>
+        <span style={s.scanSub}>{t.scanSub}</span>
       </button>
 
       {/* Quick stats */}
       <div style={s.statsRow}>
         <div style={s.statCard}>
           <div style={s.statValue}>{sessionCount}</div>
-          <div style={s.statLabel}>This session</div>
+          <div style={s.statLabel}>{t.thisSession}</div>
         </div>
         <button style={s.actionCard} onClick={onOpenList}>
           <ListIcon size={22} />
-          <span style={s.actionLabel}>Browse All Parts</span>
+          <span style={s.actionLabel}>{t.browseAll}</span>
         </button>
       </div>
 
       {/* Tips */}
       <div style={s.tipsCard}>
-        <h3 style={s.tipsTitle}>Quick Tips</h3>
+        <h3 style={s.tipsTitle}>{t.quickTips}</h3>
         <div style={s.tip}>
-          <span>Scanning an <strong>existing barcode</strong> lets you add more quantity or edit the entry. No duplicates created.</span>
+          <span>{t.tip1a}<strong>{t.tip1b}</strong>{t.tip1c}</span>
         </div>
         <div style={s.tip}>
-          <span>Location field persists between scans so you don't retype it when scanning a shelf.</span>
+          <span>{t.tip2}</span>
         </div>
         <div style={s.tip}>
-          <span>Snap multiple photos per part — front, barcode side, labels, whatever helps AI identify it later.</span>
+          <span>{t.tip3}</span>
         </div>
         <div style={s.tip}>
-          <span>Use the scanner to search for existing parts by barcode too.</span>
+          <span>{t.tip4}</span>
         </div>
       </div>
     </div>

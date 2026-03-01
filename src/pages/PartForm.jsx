@@ -3,8 +3,9 @@ import { ChevronLeftIcon, TrashIcon, LoaderIcon } from '../components/Icons';
 import PhotoCapture from '../components/PhotoCapture';
 import QuantitySelector from '../components/QuantitySelector';
 import { getPartByBarcode, createPart, updatePart, addToPart, uploadPhotos, deletePart } from '../lib/api';
+import { T } from '../lib/i18n';
 
-export default function PartForm({ barcode, existingPart, scanPhoto, lastLocation, onSaved, onBack, onDeleted, showToast }) {
+export default function PartForm({ barcode, existingPart, scanPhoto, lastLocation, onSaved, onBack, onDeleted, showToast, lang }) {
   const [loading, setLoading] = useState(!existingPart && !!barcode);
   const [part, setPart] = useState(existingPart || null);
   const [mode, setMode] = useState(existingPart ? 'edit' : 'lookup');
@@ -17,6 +18,8 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const t = T[lang];
 
   // Inject scan capture photo as first new photo
   useEffect(() => {
@@ -49,12 +52,14 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
           setPart(found);
           populateFromPart(found);
           setMode('addMore');
+          setQuantity(1);
+          setNewPhotos([]);
         } else {
           setMode('new');
         }
       } catch (err) {
         console.error(err);
-        showToast('Failed to look up barcode', 'error');
+        showToast(t.failedLookup || 'Failed to look up barcode', 'error');
         setMode('new');
       }
       setLoading(false);
@@ -89,7 +94,7 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
           location,
           photos: uploadedUrls,
         });
-        showToast(`Created: ${barcode} × ${quantity}`);
+        showToast(lang === 'es' ? `Creado: ${barcode} × ${quantity}` : `Created: ${barcode} × ${quantity}`);
       } else if (mode === 'addMore') {
         result = await addToPart(part, {
           quantity,
@@ -97,7 +102,10 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
           notes: notes !== (part.notes || '') ? notes : undefined,
           location: location !== (part.location || '') ? location : undefined,
         });
-        showToast(`Added ${quantity} more to ${part.barcode} (total: ${result.quantity})`);
+        showToast(lang === 'es'
+          ? `Agregadas ${quantity} más a ${part.barcode} (total: ${result.quantity})`
+          : `Added ${quantity} more to ${part.barcode} (total: ${result.quantity})`
+        );
       } else if (mode === 'edit') {
         result = await updatePart(part.id, {
           quantity,
@@ -105,13 +113,13 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
           location,
           photos: [...existingPhotos, ...uploadedUrls],
         });
-        showToast(`Updated: ${part.barcode}`);
+        showToast(lang === 'es' ? `Actualizado: ${part.barcode}` : `Updated: ${part.barcode}`);
       }
 
       onSaved(result);
     } catch (err) {
       console.error(err);
-      showToast('Save failed: ' + (err.message || 'Unknown error'), 'error');
+      showToast((t.saveFailed || 'Save failed') + ': ' + (err.message || t.unknown || 'Unknown error'), 'error');
     }
     setSaving(false);
   };
@@ -124,10 +132,10 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
     setDeleting(true);
     try {
       await deletePart(part.id);
-      showToast(`Deleted: ${part.barcode}`);
+      showToast(lang === 'es' ? `Eliminado: ${part.barcode}` : `Deleted: ${part.barcode}`);
       onDeleted?.(part.id);
     } catch (err) {
-      showToast('Delete failed', 'error');
+      showToast(t.deleteFailed || 'Delete failed', 'error');
     }
     setDeleting(false);
   };
@@ -144,7 +152,7 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
     return (
       <div style={s.centered}>
         <LoaderIcon size={28} />
-        <p style={{ color: 'var(--text-secondary)', marginTop: 12 }}>Looking up barcode...</p>
+        <p style={{ color: 'var(--text-secondary)', marginTop: 12 }}>{t.lookingUp}</p>
       </div>
     );
   }
@@ -155,25 +163,25 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
   return (
     <div className="animate-slide-up" style={{ padding: 16 }}>
       <button className="btn btn-ghost" style={{ marginBottom: 12, marginLeft: -10 }} onClick={onBack}>
-        <ChevronLeftIcon /> Back
+        <ChevronLeftIcon /> {t.back}
       </button>
 
       {/* Barcode card */}
       <div className="card" style={{ marginBottom: 20, position: 'relative' }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.1em', marginBottom: 4 }}>
-          BARCODE
+          {t.barcode}
         </div>
         <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--mono)', color: 'var(--amber)', wordBreak: 'break-all' }}>
           {displayBarcode}
         </div>
         {isExisting && (
           <div className="badge badge-green" style={{ position: 'absolute', top: 14, right: 14 }}>
-            EXISTS
+            {t.exists}
           </div>
         )}
         {mode === 'new' && (
           <div className="badge badge-amber" style={{ position: 'absolute', top: 14, right: 14 }}>
-            NEW
+            {t.newBadge}
           </div>
         )}
       </div>
@@ -186,14 +194,14 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
             style={{ ...s.modeBtn, ...(mode === 'addMore' ? s.modeBtnActive : {}) }}
             onClick={() => { setMode('addMore'); setQuantity(1); }}
           >
-            Add More
+            {t.addMore}
           </button>
           <button
             className="btn"
             style={{ ...s.modeBtn, ...(mode === 'edit' ? s.modeBtnActive : {}) }}
             onClick={() => { setMode('edit'); setQuantity(part.quantity); }}
           >
-            Edit Entry
+            {t.editEntry}
           </button>
         </div>
       )}
@@ -202,19 +210,19 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
       {mode === 'addMore' && part && (
         <div style={s.existingSummary}>
           <div style={s.summaryRow}>
-            <span style={s.summaryLabel}>Current qty:</span>
+            <span style={s.summaryLabel}>{t.currentQty}</span>
             <span style={s.summaryValue}>{part.quantity}</span>
           </div>
           {part.location && (
             <div style={s.summaryRow}>
-              <span style={s.summaryLabel}>Location:</span>
+              <span style={s.summaryLabel}>{t.locationLabel}</span>
               <span style={s.summaryValue}>{part.location}</span>
             </div>
           )}
           {(part.photos?.length || 0) > 0 && (
             <div style={s.summaryRow}>
-              <span style={s.summaryLabel}>Photos:</span>
-              <span style={s.summaryValue}>{part.photos.length} existing</span>
+              <span style={s.summaryLabel}>{t.photosCount}</span>
+              <span style={s.summaryValue}>{part.photos.length} {t.existing}</span>
             </div>
           )}
         </div>
@@ -223,33 +231,36 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
       {/* Quantity */}
       <div style={{ marginBottom: 20 }}>
         <label className="label">
-          {mode === 'addMore' ? 'Quantity to add' : 'Total Quantity'}
+          {mode === 'addMore' ? t.quantityToAdd : t.totalQuantity}
         </label>
         <QuantitySelector value={quantity} onChange={setQuantity} />
       </div>
 
-      {/* Existing photos (edit mode only) */}
-      {mode === 'edit' && existingPhotos.length > 0 && (
+      {/* Existing photos — editable in edit mode, read-only preview in addMore */}
+      {existingPhotos.length > 0 && (mode === 'edit' || mode === 'addMore') && (
         <div style={{ marginBottom: 16 }}>
           <label className="label">
-            Existing Photos <span className="label-hint">({existingPhotos.length})</span>
+            {t.existingPhotos}{' '}
+            <span className="label-hint">({existingPhotos.length})</span>
           </label>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {existingPhotos.map((url, i) => (
               <div key={i} style={s.existingThumb}>
                 <img src={url} alt="" style={s.existingThumbImg} />
-                <button style={s.thumbRemove} onClick={() => handleRemoveExistingPhoto(url)}>×</button>
+                {mode === 'edit' && (
+                  <button style={s.thumbRemove} onClick={() => handleRemoveExistingPhoto(url)}>×</button>
+                )}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* New photos (includes scan capture as first) */}
+      {/* New photos */}
       <div style={{ marginBottom: 20 }}>
         <label className="label">
-          {mode === 'addMore' ? 'Add Photos' : 'Photos'}{' '}
-          <span className="label-hint">({newPhotos.length} new)</span>
+          {mode === 'addMore' ? t.addPhotos : t.photosLabel}{' '}
+          <span className="label-hint">({newPhotos.length} {lang === 'es' ? 'nuevas' : 'new'})</span>
         </label>
         <PhotoCapture
           photos={newPhotos}
@@ -260,11 +271,11 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
 
       <div style={{ marginBottom: 20 }}>
         <label className="label">
-          Location / Shelf <span className="label-hint">(optional)</span>
+          {t.locationShelf} <span className="label-hint">{t.optional}</span>
         </label>
         <input
           className="input"
-          placeholder="e.g. Shelf A3, Bin 12, Pallet 7"
+          placeholder={t.locationPlaceholder}
           value={location}
           onChange={(e) => setLocation(e.target.value)}
         />
@@ -272,11 +283,11 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
 
       <div style={{ marginBottom: 24 }}>
         <label className="label">
-          Notes <span className="label-hint">(optional)</span>
+          {t.notes} <span className="label-hint">{t.optional}</span>
         </label>
         <input
           className="input"
-          placeholder="e.g. damaged box, opened, mixed lot"
+          placeholder={t.notesPlaceholder}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
@@ -291,12 +302,12 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
         >
           {saving ? <LoaderIcon size={18} /> : null}
           {saving
-            ? 'Saving...'
+            ? t.saving
             : mode === 'addMore'
-              ? `Add ${quantity} More`
+              ? (lang === 'es' ? `Agregar ${quantity} más` : `Add ${quantity} More`)
               : mode === 'new'
-                ? 'Create Entry'
-                : 'Save Changes'
+                ? t.createEntry
+                : t.saveChanges
           }
         </button>
       </div>
@@ -310,7 +321,7 @@ export default function PartForm({ barcode, existingPart, scanPhoto, lastLocatio
             disabled={deleting}
           >
             <TrashIcon />
-            {confirmDelete ? 'Tap again to confirm delete' : 'Delete this part'}
+            {confirmDelete ? t.confirmDelete : t.deletePart}
           </button>
         </div>
       )}

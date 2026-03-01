@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { LockIcon, BoxIcon } from '../components/Icons';
+import { T } from '../lib/i18n';
 
 const APP_PASSWORD = import.meta.env.VITE_APP_PASSWORD;
 
-export default function LoginPage({ onUnlock }) {
+export default function LoginPage({ onUnlock, lang, setLang }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
   const [shaking, setShaking] = useState(false);
+
+  const t = T[lang];
 
   const handleSubmit = (e) => {
     e?.preventDefault();
@@ -31,13 +34,17 @@ export default function LoginPage({ onUnlock }) {
         }
       `}</style>
 
+      <button style={s.langBtn} onClick={() => setLang(lang === 'en' ? 'es' : 'en')}>
+        {t.langToggle}
+      </button>
+
       <div style={s.card} className="animate-slide-up">
         <div style={s.iconWrap}>
           <BoxIcon size={32} />
         </div>
 
-        <h1 style={s.title}>Parts Vault</h1>
-        <p style={s.subtitle}>Enter password to continue</p>
+        <h1 style={s.title}>{t.appName}</h1>
+        <p style={s.subtitle}>{t.enterPassword}</p>
 
         <div
           style={{
@@ -50,7 +57,7 @@ export default function LoginPage({ onUnlock }) {
           <input
             autoFocus
             type="password"
-            placeholder="Password"
+            placeholder={t.passwordPlaceholder}
             value={password}
             onChange={(e) => { setPassword(e.target.value); setError(false); }}
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
@@ -59,7 +66,7 @@ export default function LoginPage({ onUnlock }) {
         </div>
 
         {error && (
-          <p style={s.error}>Wrong password. Try again.</p>
+          <p style={s.error}>{t.wrongPassword}</p>
         )}
 
         <button
@@ -68,7 +75,7 @@ export default function LoginPage({ onUnlock }) {
           onClick={handleSubmit}
           disabled={!password}
         >
-          Unlock
+          {t.unlock}
         </button>
       </div>
     </div>
@@ -83,6 +90,22 @@ const s = {
     justifyContent: 'center',
     padding: 24,
     background: 'var(--bg)',
+    position: 'relative',
+  },
+  langBtn: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    padding: '4px 10px',
+    background: 'var(--surface)',
+    border: '1px solid var(--border)',
+    borderRadius: 'var(--radius-sm)',
+    color: 'var(--text-secondary)',
+    fontSize: 12,
+    fontWeight: 700,
+    cursor: 'pointer',
+    letterSpacing: '0.05em',
+    fontFamily: 'var(--font)',
   },
   card: {
     width: '100%',

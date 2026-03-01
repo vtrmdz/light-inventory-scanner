@@ -14,6 +14,7 @@ export default function App() {
     try { return sessionStorage.getItem(SESSION_KEY) === '1'; } catch { return false; }
   });
 
+  const [lang, setLang] = useState('en');
   const [screen, setScreen] = useState('home');
   const [scanPurpose, setScanPurpose] = useState('form');
 
@@ -36,7 +37,7 @@ export default function App() {
   };
 
   if (!unlocked) {
-    return <LoginPage onUnlock={handleUnlock} />;
+    return <LoginPage onUnlock={handleUnlock} lang={lang} setLang={setLang} />;
   }
 
   const goHome = () => {
@@ -100,6 +101,8 @@ export default function App() {
         sessionCount={sessionCount}
         onOpenList={openList}
         onOpenScanner={() => openScanner('form')}
+        lang={lang}
+        setLang={setLang}
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -108,6 +111,7 @@ export default function App() {
             sessionCount={sessionCount}
             onScan={() => openScanner('form')}
             onOpenList={openList}
+            lang={lang}
           />
         )}
 
@@ -122,6 +126,7 @@ export default function App() {
             onBack={goHome}
             onDeleted={handleDeleted}
             showToast={showToast}
+            lang={lang}
           />
         )}
 
@@ -131,6 +136,7 @@ export default function App() {
             onBack={goHome}
             onScan={() => openScanner('search')}
             refreshTrigger={listRefresh}
+            lang={lang}
           />
         )}
       </div>
